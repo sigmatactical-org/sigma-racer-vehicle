@@ -24,4 +24,4 @@ cargo build --release --features can-socket
 ## Dependencies
 
 - [`sigma-racer-telemetry`](../sigma-racer-telemetry) — VSS state and IPC protocol
-- [`sigma-racer-probe`](../sigma-racer-probe) — M7 CAN contract (via telemetry)
+- [`sigma-racer-sidearm`](../sigma-racer-sidearm) — M7 CAN contract (via telemetry)
