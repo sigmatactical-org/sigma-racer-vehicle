@@ -18,7 +18,7 @@ default = []
 can-socket = ["dep:socketcan"]
 
 [dependencies]
-sigma-racer-telemetry = { git = "ssh://git@github.com/sigmatactical-org/sigma-racer-telemetry.git" }
+sigma-racer-telemetry = { git = "ssh://git@github.com/sigmatactical-org/sigma-racer-telemetry.git", rev = "b09c0cc" }
 mdf4-rs = { version = "0.3.2", default-features = false, features = ["std", "dbc", "can"] }
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 socketcan = { version = "3.5", optional = true }
