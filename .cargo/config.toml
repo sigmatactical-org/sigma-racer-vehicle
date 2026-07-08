@@ -1,0 +1,5 @@
+[patch."ssh://git@github.com/sigmatactical-org/sigma-racer-probe.git"]
+sigma-racer-wingman-m7-can = { path = "../sigma-racer-probe" }
+
+[patch."ssh://git@github.com/sigmatactical-org/sigma-racer-telemetry.git"]
+sigma-racer-telemetry = { path = "../sigma-racer-telemetry" }

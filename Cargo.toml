@@ -1,0 +1,24 @@
+[package]
+name = "sigma-racer-vehicle"
+description = "Sigma Racer vehicle signal daemon — CAN decode and VSS telemetry publisher"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+authors = ["Sigma Tactical Group contributors <https://github.com/sigmatactical-org>"]
+repository = "https://github.com/sigmatactical-org/sigma-racer-vehicle"
+homepage = "https://github.com/sigmatactical-org/sigma-racer-vehicle"
+publish = false
+
+[[bin]]
+name = "sigma-racer-vehicle"
+path = "src/main.rs"
+
+[features]
+default = []
+can-socket = ["dep:socketcan"]
+
+[dependencies]
+sigma-racer-telemetry = { git = "ssh://git@github.com/sigmatactical-org/sigma-racer-telemetry.git" }
+mdf4-rs = { version = "0.3.2", default-features = false, features = ["std", "dbc", "can"] }
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+socketcan = { version = "3.5", optional = true }
