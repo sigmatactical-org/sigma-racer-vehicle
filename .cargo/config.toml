@@ -1,5 +1,5 @@
 [patch."ssh://git@github.com/sigmatactical-org/sigma-racer-sidearm.git"]
-sigma-racer-wingman-m7-can = { path = "../sigma-racer-sidearm/sigma-racer-wingman-m7-can" }
+sigma-racer-sidearm = { path = "../sigma-racer-sidearm" }
 
 [patch."ssh://git@github.com/sigmatactical-org/sigma-racer-telemetry.git"]
 sigma-racer-telemetry = { path = "../sigma-racer-telemetry" }
