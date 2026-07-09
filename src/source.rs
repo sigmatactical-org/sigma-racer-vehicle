@@ -1,4 +1,4 @@
-//! CAN or simulated signal input.
+//! CAN, RPMsg, or simulated signal input.
 
 use crate::can_log::CanLogger;
 use crate::env;
@@ -9,11 +9,15 @@ use std::time::Duration;
 
 #[cfg(feature = "can-socket")]
 use crate::can_bus::CanBus;
+#[cfg(feature = "rpmsg")]
+use crate::rpmsg_bus::RpmsgBus;
 
 pub enum SignalSource {
     Sim(Simulator),
     #[cfg(feature = "can-socket")]
     Can(CanBus),
+    #[cfg(feature = "rpmsg")]
+    Rpmsg(RpmsgBus),
 }
 
 impl SignalSource {
@@ -37,6 +41,18 @@ impl SignalSource {
                     )
                 }
             }
+            "rpmsg" | "m7" => {
+                #[cfg(feature = "rpmsg")]
+                {
+                    let _ = demo;
+                    Ok((Self::Rpmsg(RpmsgBus::open()?), logger))
+                }
+                #[cfg(not(feature = "rpmsg"))]
+                {
+                    let _ = demo;
+                    Err("VEHICLE_SOURCE=rpmsg requires a build with rpmsg feature enabled".into())
+                }
+            }
             other => Err(format!("unknown VEHICLE_SOURCE: {other}")),
         }
     }
@@ -46,6 +62,8 @@ impl SignalSource {
             Self::Sim(_) => "sim",
             #[cfg(feature = "can-socket")]
             Self::Can(_) => "can",
+            #[cfg(feature = "rpmsg")]
+            Self::Rpmsg(_) => "rpmsg",
         }
     }
 
@@ -54,6 +72,8 @@ impl SignalSource {
             Self::Sim(sim) => sim.step(dt),
             #[cfg(feature = "can-socket")]
             Self::Can(_) => {}
+            #[cfg(feature = "rpmsg")]
+            Self::Rpmsg(_) => {}
         }
     }
 
@@ -69,6 +89,11 @@ impl SignalSource {
             #[cfg(feature = "can-socket")]
             Self::Can(bus) => {
                 bus.poll(state, logger);
+                state.signals_live = bus.signals_live();
+            }
+            #[cfg(feature = "rpmsg")]
+            Self::Rpmsg(bus) => {
+                bus.poll(state);
                 state.signals_live = bus.signals_live();
             }
         }

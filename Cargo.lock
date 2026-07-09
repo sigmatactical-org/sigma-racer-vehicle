@@ -369,13 +369,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "977e65031cbd5b33463cdb8313fb06a2fb0b548cd81743c18c2d3a639e98a0be"
 
 [[package]]
+name = "sigma-racer-sidearm"
+version = "0.1.0"
+dependencies = [
+ "dbc-rs",
+]
+
+[[package]]
 name = "sigma-racer-telemetry"
 version = "0.1.0"
 dependencies = [
  "chrono",
  "serde",
  "serde_json",
- "sigma-racer-wingman-m7-can",
+ "sigma-racer-sidearm",
 ]
 
 [[package]]
@@ -384,15 +391,9 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "mdf4-rs",
+ "sigma-racer-sidearm",
  "sigma-racer-telemetry",
  "socketcan",
-]
-
-[[package]]
-name = "sigma-racer-wingman-m7-can"
-version = "0.1.0"
-dependencies = [
- "dbc-rs",
 ]
 
 [[package]]

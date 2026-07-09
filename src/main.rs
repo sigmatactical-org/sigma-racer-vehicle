@@ -5,6 +5,8 @@ mod broadcast;
 mod can_bus;
 mod can_log;
 mod env;
+#[cfg(feature = "rpmsg")]
+mod rpmsg_bus;
 mod sim;
 mod source;
 
