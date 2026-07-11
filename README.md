@@ -25,3 +25,9 @@ cargo build --release --features can-socket
 
 - [`sigma-racer-telemetry`](../sigma-racer-telemetry) — VSS state and IPC protocol
 - [`sigma-racer-sidearm`](../sigma-racer-sidearm) — M7 CAN contract (via telemetry)
+
+## Brand & artwork
+
+© Sigma Tactical Group. **All rights reserved.**
+
+The Sigma Tactical Group name, logos, marks, artwork, and visual identity are **proprietary**. They are not covered by this repository's source-code license. See [BRANDING.md](BRANDING.md).
