@@ -6,7 +6,7 @@ edition = "2024"
 license = "MIT OR Apache-2.0"
 authors = ["Sigma Tactical Group contributors <https://github.com/sigmatactical-org>"]
 repository = "https://github.com/sigmatactical-org/sigma-racer-vehicle"
-homepage = "https://github.com/sigmatactical-org/sigma-racer-vehicle"
+homepage = "https://sigmatactical.org"
 publish = false
 
 [[bin]]
