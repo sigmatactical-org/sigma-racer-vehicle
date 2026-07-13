@@ -504,14 +504,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sigma-racer-sidearm"
-version = "0.1.0"
-source = "git+https://github.com/sigmatactical-org/sigma-racer-sidearm.git?rev=a4c04c8#a4c04c8e1b8689847fcd2be5112625a16fa2fd21"
-dependencies = [
- "dbc-rs",
-]
-
-[[package]]
 name = "sigma-racer-telemetry"
 version = "0.1.0"
 dependencies = [
@@ -521,7 +513,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
- "sigma-racer-sidearm 0.1.0 (git+https://github.com/sigmatactical-org/sigma-racer-sidearm.git?rev=a4c04c8)",
+ "sigma-racer-sidearm",
 ]
 
 [[package]]
@@ -530,7 +522,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "mdf4-rs",
- "sigma-racer-sidearm 0.1.0",
+ "sigma-racer-sidearm",
  "sigma-racer-telemetry",
  "socketcan",
 ]

@@ -1,5 +1,15 @@
+# Sibling crates are checked out under embedded/ (local dev and CI/Yocto).
+# Patch both SSH and HTTPS URL schemes so transitive deps (telemetry → sidearm
+# via https) resolve to a single path crate — otherwise Cargo.lock keeps a git
+# sidearm entry and `cargo --frozen` fails in Yocto.
 [patch."ssh://git@github.com/sigmatactical-org/sigma-racer-sidearm.git"]
 sigma-racer-sidearm = { path = "../sigma-racer-sidearm" }
 
+[patch."https://github.com/sigmatactical-org/sigma-racer-sidearm.git"]
+sigma-racer-sidearm = { path = "../sigma-racer-sidearm" }
+
 [patch."ssh://git@github.com/sigmatactical-org/sigma-racer-telemetry.git"]
+sigma-racer-telemetry = { path = "../sigma-racer-telemetry" }
+
+[patch."https://github.com/sigmatactical-org/sigma-racer-telemetry.git"]
 sigma-racer-telemetry = { path = "../sigma-racer-telemetry" }
