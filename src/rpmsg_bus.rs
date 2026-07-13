@@ -1,6 +1,6 @@
 //! RPMsg character device input from the M7 `sigma-m7-signals` endpoint.
 
-use sigma_racer_sidearm::{decode_wire, M7Signals};
+use sigma_racer_sidearm::{M7Signals, decode_wire};
 use sigma_racer_telemetry::can::from_signals;
 use sigma_racer_telemetry::state::VehicleState;
 use std::fs::{self, File, OpenOptions};

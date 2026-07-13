@@ -12,9 +12,7 @@ mod source;
 
 use broadcast::Broadcaster;
 use env::{flag, var_or};
-use sigma_racer_telemetry::protocol::{
-    diff_vss, Message, SNAPSHOT_INTERVAL_MS, SOCKET_PATH,
-};
+use sigma_racer_telemetry::protocol::{Message, SNAPSHOT_INTERVAL_MS, SOCKET_PATH, diff_vss};
 use sigma_racer_telemetry::socket::bind_listener;
 use sigma_racer_telemetry::state::VehicleState;
 use source::SignalSource;
@@ -75,9 +73,8 @@ fn run() -> Result<(), String> {
 
         if heartbeat_at.elapsed() >= Duration::from_secs(1) {
             seq += 1;
-            broadcaster.send(
-                Message::heartbeat(seq, started.elapsed().as_millis() as u64).to_line(),
-            );
+            broadcaster
+                .send(Message::heartbeat(seq, started.elapsed().as_millis() as u64).to_line());
             heartbeat_at = Instant::now();
         }
 

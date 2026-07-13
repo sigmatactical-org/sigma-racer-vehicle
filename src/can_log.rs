@@ -1,9 +1,9 @@
 //! Optional MDF4 CAN logging via mdf4-rs CanDbcLogger.
 
 use crate::env;
-use sigma_racer_telemetry::m7_dbc::m7_dbc;
 use mdf4_rs::can::CanDbcLogger;
 use mdf4_rs::writer::VecWriter;
+use sigma_racer_telemetry::m7_dbc::m7_dbc;
 use std::fs;
 use std::path::PathBuf;
 use std::time::Instant;
@@ -62,10 +62,9 @@ impl Drop for CanLogger {
                     let _ = fs::create_dir_all(parent);
                 }
                 match fs::write(&self.path, bytes) {
-                    Ok(()) => eprintln!(
-                        "sigma-racer-vehicle: wrote CAN log {}",
-                        self.path.display()
-                    ),
+                    Ok(()) => {
+                        eprintln!("sigma-racer-vehicle: wrote CAN log {}", self.path.display())
+                    }
                     Err(err) => {
                         eprintln!(
                             "sigma-racer-vehicle: failed to write {}: {err}",

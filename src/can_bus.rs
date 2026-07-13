@@ -4,11 +4,11 @@ use crate::can_log::CanLogger;
 use crate::sim::Simulator;
 use sigma_racer_telemetry::can::{decode_frame, encode_sim_frames};
 use sigma_racer_telemetry::state::VehicleState;
-use socketcan::{CanFrame, CanSocket, EmbeddedFrame, Frame, Socket};
 use socketcan::frame::CanDataFrame;
+use socketcan::{CanFrame, CanSocket, EmbeddedFrame, Frame, Socket};
 use std::io::ErrorKind;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -25,8 +25,8 @@ struct DemoInjector {
 
 impl CanBus {
     pub fn open(iface: &str, demo: bool) -> Result<Self, String> {
-        let socket = CanSocket::open(iface)
-            .map_err(|err| format!("open CAN interface {iface}: {err}"))?;
+        let socket =
+            CanSocket::open(iface).map_err(|err| format!("open CAN interface {iface}: {err}"))?;
         socket
             .set_nonblocking(true)
             .map_err(|err| format!("CAN nonblocking {iface}: {err}"))?;
