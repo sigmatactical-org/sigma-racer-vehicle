@@ -1,5 +1,7 @@
 //! Sigma Racer vehicle daemon — CAN → VSS → Unix socket telemetry.
 
+#![forbid(unsafe_code)]
+
 mod broadcast;
 #[cfg(feature = "can-socket")]
 mod can_bus;

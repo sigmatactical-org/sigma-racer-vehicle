@@ -41,3 +41,12 @@ jobs:
 
       - name: Clippy
         run: cargo clippy --all-targets --features can-socket -- -D warnings
+
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@1.97.0
+        with:
+          components: rustfmt
+      - run: cargo fmt --all -- --check
