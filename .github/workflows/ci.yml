@@ -28,7 +28,7 @@ jobs:
           repository: sigmatactical-org/sigma-racer-sidearm
           path: embedded/sigma-racer-sidearm
 
-      - uses: dtolnay/rust-toolchain@1.92.0
+      - uses: dtolnay/rust-toolchain@1.97.0
         with:
           components: clippy
 

@@ -1,7 +1,7 @@
 # sigma-racer-vehicle
 
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
-[![MSRV](https://img.shields.io/badge/MSRV-1.92.0-blue.svg)](https://www.rust-lang.org)
+[![MSRV](https://img.shields.io/badge/MSRV-1.97.0-blue.svg)](https://www.rust-lang.org)
 
 Linux daemon for the Sigma Racer cockpit: reads M7 safety-bus CAN (or a simulator), maintains `VehicleState`, and publishes NDJSON telemetry on a Unix socket for `sigma-racer-cluster`.
 
