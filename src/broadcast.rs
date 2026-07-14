@@ -5,14 +5,12 @@
 //! once the cap is exceeded that client is dropped rather than blocking the
 //! whole telemetry loop (which would stall every other consumer).
 
-mod client;
-
-use client::Client;
+use sigma_racer_telemetry::io::BacklogWriter;
 use std::os::unix::net::UnixStream;
 
 /// Broadcasts newline-delimited telemetry messages to every connected client.
 pub struct Broadcaster {
-    clients: Vec<Client>,
+    clients: Vec<BacklogWriter<UnixStream>>,
 }
 
 impl Broadcaster {
@@ -31,7 +29,7 @@ impl Broadcaster {
         if stream.set_nonblocking(true).is_err() {
             return;
         }
-        let mut client = Client::new(stream);
+        let mut client = BacklogWriter::new(stream);
         if client.enqueue_and_flush(with_newline(initial).as_bytes()) {
             self.clients.push(client);
         }
