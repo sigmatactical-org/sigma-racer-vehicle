@@ -13,12 +13,15 @@ use std::os::unix::fs::OpenOptionsExt;
 
 const ENDPOINT: &str = "sigma-m7-signals";
 
+/// Non-blocking reader for M7 wire-format signal packets from the RPMsg
+/// character device.
 pub struct RpmsgBus {
     dev: File,
     last_rx: Instant,
 }
 
 impl RpmsgBus {
+    /// Open the RPMsg endpoint device (resolved via sysfs or `RPMSG_DEVICE`).
     pub fn open() -> Result<Self, String> {
         let path = resolve_device()?;
         let mut opts = OpenOptions::new();
@@ -34,6 +37,7 @@ impl RpmsgBus {
         })
     }
 
+    /// Read and decode one pending wire packet, if any, into `state`.
     pub fn poll(&mut self, state: &mut VehicleState) {
         let mut buf = [0u8; 64];
         match self.dev.read(&mut buf) {
@@ -47,15 +51,17 @@ impl RpmsgBus {
             }
             Ok(_) => {}
             Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
-            Err(e) => eprintln!("rpmsg read: {e}"),
+            Err(e) => crate::log::log!("rpmsg read: {e}"),
         }
     }
 
+    /// Whether a packet arrived recently enough (500 ms) to trust the M7.
     pub fn signals_live(&self) -> bool {
         self.last_rx.elapsed() < Duration::from_millis(500)
     }
 }
 
+/// Find the `/dev/rpmsgN` node whose sysfs name matches [`ENDPOINT`].
 fn resolve_device() -> Result<PathBuf, String> {
     if let Ok(path) = std::env::var("RPMSG_DEVICE") {
         return Ok(PathBuf::from(path));

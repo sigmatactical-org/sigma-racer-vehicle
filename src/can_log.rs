@@ -1,6 +1,7 @@
 //! Optional MDF4 CAN logging via mdf4-rs CanDbcLogger.
 
 use crate::env;
+use crate::log::log;
 use mdf4_rs::can::CanDbcLogger;
 use mdf4_rs::writer::VecWriter;
 use sigma_racer_telemetry::m7_dbc::m7_dbc;
@@ -8,6 +9,8 @@ use std::fs;
 use std::path::PathBuf;
 use std::time::Instant;
 
+/// Best-effort MDF4 recorder for every decoded CAN frame; the file is
+/// finalized and written to `CAN_LOG_PATH` when the logger is dropped.
 pub struct CanLogger {
     path: PathBuf,
     logger: Option<CanDbcLogger<VecWriter>>,
@@ -15,6 +18,7 @@ pub struct CanLogger {
 }
 
 impl CanLogger {
+    /// Start a logger when `CAN_LOG_PATH` is set; `None` disables logging.
     pub fn open() -> Option<Self> {
         let path = env::var("CAN_LOG_PATH")?;
         if path.is_empty() {
@@ -27,12 +31,12 @@ impl CanLogger {
             Err(err) => {
                 // Logging is best-effort; never take down telemetry because the
                 // optional MDF4 logger could not be constructed.
-                eprintln!("sigma-racer-vehicle: CAN logging disabled: {err}");
+                log!("CAN logging disabled: {err}");
                 return None;
             }
         };
 
-        eprintln!("sigma-racer-vehicle: CAN MDF4 logging to {path}");
+        log!("CAN MDF4 logging to {path}");
         Some(Self {
             path: PathBuf::from(path),
             logger: Some(logger),
@@ -40,6 +44,7 @@ impl CanLogger {
         })
     }
 
+    /// Record `frames` with a microsecond timestamp relative to start-up.
     pub fn log_frames(&mut self, frames: &[(u32, [u8; 8])]) {
         let Some(logger) = self.logger.as_mut() else {
             return;
@@ -62,18 +67,11 @@ impl Drop for CanLogger {
                     let _ = fs::create_dir_all(parent);
                 }
                 match fs::write(&self.path, bytes) {
-                    Ok(()) => {
-                        eprintln!("sigma-racer-vehicle: wrote CAN log {}", self.path.display())
-                    }
-                    Err(err) => {
-                        eprintln!(
-                            "sigma-racer-vehicle: failed to write {}: {err}",
-                            self.path.display()
-                        );
-                    }
+                    Ok(()) => log!("wrote CAN log {}", self.path.display()),
+                    Err(err) => log!("failed to write {}: {err}", self.path.display()),
                 }
             }
-            Err(err) => eprintln!("sigma-racer-vehicle: CAN log finalize: {err}"),
+            Err(err) => log!("CAN log finalize: {err}"),
         }
     }
 }

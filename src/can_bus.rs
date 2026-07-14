@@ -1,29 +1,29 @@
 //! SocketCAN input (and optional demo frame injection on vcan).
 
+mod demo_injector;
+
 use crate::can_log::CanLogger;
-use crate::sim::Simulator;
-use sigma_racer_telemetry::can::{decode_frame, encode_sim_frames};
+use crate::log::log;
+use demo_injector::DemoInjector;
+use sigma_racer_telemetry::can::decode_frame;
 use sigma_racer_telemetry::state::VehicleState;
 use socketcan::frame::CanDataFrame;
 use socketcan::{CanFrame, CanSocket, EmbeddedFrame, Frame, Socket};
 use std::io::ErrorKind;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::thread;
 use std::time::{Duration, Instant};
 
+/// Non-blocking SocketCAN reader that decodes M7 safety-bus frames into the
+/// shared [`VehicleState`].
 pub struct CanBus {
     socket: CanSocket,
+    /// When the last decodable frame arrived; drives [`CanBus::signals_live`].
     last_frame_at: Option<Instant>,
     _demo: Option<DemoInjector>,
 }
 
-struct DemoInjector {
-    stop: Arc<AtomicBool>,
-    _handle: thread::JoinHandle<()>,
-}
-
 impl CanBus {
+    /// Open `iface` in non-blocking mode, optionally spawning the demo
+    /// injector that feeds the bus with simulated frames.
     pub fn open(iface: &str, demo: bool) -> Result<Self, String> {
         let socket =
             CanSocket::open(iface).map_err(|err| format!("open CAN interface {iface}: {err}"))?;
@@ -37,8 +37,8 @@ impl CanBus {
             None
         };
 
-        eprintln!(
-            "sigma-racer-vehicle: SocketCAN on {iface}{}",
+        log!(
+            "SocketCAN on {iface}{}",
             if demo { " (demo injector)" } else { "" }
         );
 
@@ -49,6 +49,8 @@ impl CanBus {
         })
     }
 
+    /// Drain every frame currently queued on the socket into `state`,
+    /// mirroring decoded frames to the optional MDF4 `logger`.
     pub fn poll(&mut self, state: &mut VehicleState, logger: &mut Option<CanLogger>) {
         loop {
             match self.socket.read_frame() {
@@ -56,19 +58,23 @@ impl CanBus {
                 Ok(_) => continue,
                 Err(err) if err.kind() == ErrorKind::WouldBlock => break,
                 Err(err) => {
-                    eprintln!("sigma-racer-vehicle: CAN read: {err}");
+                    log!("CAN read: {err}");
                     break;
                 }
             }
         }
     }
 
+    /// Whether a decodable frame arrived recently enough (500 ms) to consider
+    /// the M7 signal source alive.
     pub fn signals_live(&self) -> bool {
         self.last_frame_at
             .map(|t| t.elapsed() < Duration::from_millis(500))
             .unwrap_or(false)
     }
 
+    /// Decode one data frame into `state` and log it; unknown IDs are noted
+    /// but otherwise ignored.
     fn handle_data_frame(
         &mut self,
         frame: &CanDataFrame,
@@ -86,59 +92,7 @@ impl CanBus {
                 log.log_frames(&[(id, payload)]);
             }
         } else {
-            eprintln!("sigma-racer-vehicle: ignore undecodable CAN frame 0x{id:03X}");
+            log!("ignore undecodable CAN frame 0x{id:03X}");
         }
-    }
-}
-
-impl DemoInjector {
-    fn spawn(iface: &str) -> Result<Self, String> {
-        let stop = Arc::new(AtomicBool::new(false));
-        let stop_flag = Arc::clone(&stop);
-        let iface = iface.to_owned();
-        let handle = thread::Builder::new()
-            .name("can-demo".into())
-            .spawn(move || demo_loop(&iface, stop_flag))
-            .map_err(|err| format!("spawn CAN demo injector: {err}"))?;
-        Ok(Self {
-            stop,
-            _handle: handle,
-        })
-    }
-}
-
-impl Drop for DemoInjector {
-    fn drop(&mut self) {
-        self.stop.store(true, Ordering::Relaxed);
-    }
-}
-
-fn demo_loop(iface: &str, stop: Arc<AtomicBool>) {
-    let socket = match CanSocket::open(iface) {
-        Ok(socket) => socket,
-        Err(err) => {
-            eprintln!("sigma-racer-vehicle: CAN demo open {iface}: {err}");
-            return;
-        }
-    };
-
-    let mut sim = Simulator::new(true);
-    while !stop.load(Ordering::Relaxed) {
-        sim.step(Duration::from_millis(50));
-        let mut state = VehicleState::idle();
-        sim.apply_to(&mut state);
-        for (id, payload) in encode_sim_frames(&state) {
-            let frame = match CanFrame::from_raw_id(id, &payload) {
-                Some(frame) => frame,
-                None => {
-                    eprintln!("sigma-racer-vehicle: CAN demo encode 0x{id:03X}");
-                    continue;
-                }
-            };
-            if let Err(err) = socket.write_frame(&frame) {
-                eprintln!("sigma-racer-vehicle: CAN demo write: {err}");
-            }
-        }
-        thread::sleep(Duration::from_millis(50));
     }
 }

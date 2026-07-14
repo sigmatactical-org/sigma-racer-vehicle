@@ -12,6 +12,7 @@ use crate::can_bus::CanBus;
 #[cfg(feature = "rpmsg")]
 use crate::rpmsg_bus::RpmsgBus;
 
+/// The daemon's active signal input, selected by `VEHICLE_SOURCE`.
 pub enum SignalSource {
     Sim(Simulator),
     #[cfg(feature = "can-socket")]
@@ -21,6 +22,8 @@ pub enum SignalSource {
 }
 
 impl SignalSource {
+    /// Open the source named by `VEHICLE_SOURCE` (default `sim`) together
+    /// with the optional CAN logger.
     pub fn open(demo: bool) -> Result<(Self, Option<CanLogger>), String> {
         let source = env::var_or("VEHICLE_SOURCE", "sim");
         let logger = CanLogger::open();
@@ -57,6 +60,7 @@ impl SignalSource {
         }
     }
 
+    /// Short source name for the start-up log line.
     pub fn name(&self) -> &'static str {
         match self {
             Self::Sim(_) => "sim",
@@ -67,6 +71,7 @@ impl SignalSource {
         }
     }
 
+    /// Advance time-driven sources (only the simulator needs stepping).
     pub fn step(&mut self, dt: Duration) {
         match self {
             Self::Sim(sim) => sim.step(dt),
@@ -77,6 +82,7 @@ impl SignalSource {
         }
     }
 
+    /// Pull the newest signals into `state` and refresh derived values.
     pub fn apply_to(&mut self, state: &mut VehicleState, logger: &mut Option<CanLogger>) {
         match self {
             Self::Sim(sim) => {

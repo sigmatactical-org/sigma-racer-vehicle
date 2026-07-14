@@ -5,6 +5,7 @@ mod broadcast;
 mod can_bus;
 mod can_log;
 mod env;
+mod log;
 #[cfg(feature = "rpmsg")]
 mod rpmsg_bus;
 mod sim;
@@ -12,6 +13,7 @@ mod source;
 
 use broadcast::Broadcaster;
 use env::{flag, var_or};
+use log::log;
 use sigma_racer_telemetry::protocol::{Message, SNAPSHOT_INTERVAL_MS, SOCKET_PATH, diff_vss};
 use sigma_racer_telemetry::socket::bind_listener;
 use sigma_racer_telemetry::state::VehicleState;
@@ -20,13 +22,16 @@ use std::path::Path;
 use std::thread;
 use std::time::{Duration, Instant};
 
+/// Entry point: run the daemon and exit non-zero on a startup error.
 fn main() {
     if let Err(err) = run() {
-        eprintln!("sigma-racer-vehicle: {err}");
+        log!("{err}");
         std::process::exit(1);
     }
 }
 
+/// Main loop: sample the signal source at 50 ms, diff against the previous
+/// state, and broadcast updates/snapshots/heartbeats to connected clients.
 fn run() -> Result<(), String> {
     let socket_path = var_or("TELEMETRY_SOCKET", SOCKET_PATH);
     let demo = flag("VEHICLE_DEMO");
@@ -45,10 +50,7 @@ fn run() -> Result<(), String> {
     let mut snapshot_at = Instant::now();
     let mut heartbeat_at = Instant::now();
 
-    eprintln!(
-        "sigma-racer-vehicle: listening on {socket_path} (source={})",
-        source.name()
-    );
+    log!("listening on {socket_path} (source={})", source.name());
 
     loop {
         accept_clients(&listener, &mut broadcaster, &mut seq, &state);
@@ -82,6 +84,7 @@ fn run() -> Result<(), String> {
     }
 }
 
+/// Accept every pending client connection and greet each with a snapshot.
 fn accept_clients(
     listener: &std::os::unix::net::UnixListener,
     broadcaster: &mut Broadcaster,
@@ -97,7 +100,7 @@ fn accept_clients(
             }
             Err(err) if err.kind() == std::io::ErrorKind::WouldBlock => break,
             Err(err) => {
-                eprintln!("sigma-racer-vehicle: accept: {err}");
+                log!("accept: {err}");
                 break;
             }
         }

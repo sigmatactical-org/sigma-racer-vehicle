@@ -2,6 +2,8 @@
 
 use std::env;
 
+/// Read `SIGMA_RACER_WINGMAN_<primary>` falling back to bare `<primary>`;
+/// empty values count as unset.
 pub fn var(primary: &str) -> Option<String> {
     // Prefer the namespaced SIGMA_RACER_WINGMAN_* variable, then the bare name.
     // The owned `sigma` string is dropped at the end of the call — no leak.
@@ -16,10 +18,12 @@ pub fn var(primary: &str) -> Option<String> {
     None
 }
 
+/// [`var`] with a default for unset/empty variables.
 pub fn var_or(primary: &str, default: &str) -> String {
     var(primary).unwrap_or_else(|| default.into())
 }
 
+/// Boolean [`var`]: `1`, `true`, `TRUE`, or `yes` enable the flag.
 pub fn flag(primary: &str) -> bool {
     matches!(
         var(primary).as_deref(),
