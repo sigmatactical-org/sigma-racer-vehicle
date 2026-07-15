@@ -36,6 +36,7 @@ jobs:
         with:
           workspaces: embedded/sigma-racer-vehicle
           add-rust-environment-hash-key: false
+          key: ${{ hashFiles('embedded/sigma-racer-vehicle/Cargo.lock', 'embedded/sigma-racer-vehicle/Cargo.toml', 'embedded/sigma-racer-vehicle/rust-toolchain.toml', 'embedded/sigma-racer-vehicle/.cargo/config.toml') }}
 
       - name: Tests
         run: cargo test --features can-socket
