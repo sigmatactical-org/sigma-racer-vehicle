@@ -35,6 +35,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: embedded/sigma-racer-vehicle
+          add-rust-environment-hash-key: false
 
       - name: Tests
         run: cargo test --features can-socket
