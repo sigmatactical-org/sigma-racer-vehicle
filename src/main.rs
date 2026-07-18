@@ -16,6 +16,7 @@ mod source;
 use broadcast::Broadcaster;
 use env::{flag, var_or};
 use log::log;
+use sigma_racer_telemetry::anomaly::AnomalyEngine;
 use sigma_racer_telemetry::protocol::{Message, SNAPSHOT_INTERVAL_MS, SOCKET_PATH, diff_vss};
 use sigma_racer_telemetry::socket::bind_listener;
 use sigma_racer_telemetry::state::VehicleState;
@@ -51,6 +52,9 @@ fn run() -> Result<(), String> {
     let mut sample_at = Instant::now();
     let mut snapshot_at = Instant::now();
     let mut heartbeat_at = Instant::now();
+    // Observe-only anomaly detection: raises/clears travel as Event messages.
+    // The daemon never actuates anything; protective action stays on the M7.
+    let mut anomalies = AnomalyEngine::sigma_defaults();
 
     log!("listening on {socket_path} (source={})", source.name());
 
@@ -72,6 +76,14 @@ fn run() -> Result<(), String> {
                 broadcaster.send(Message::snapshot(seq, &state).to_line());
                 snapshot_at = Instant::now();
             }
+
+            // Clock captured once at the loop boundary; detectors are pure.
+            let ts_ms = chrono::Utc::now().timestamp_millis();
+            for ev in anomalies.observe(ts_ms, &state) {
+                seq += 1;
+                broadcaster.send(ev.to_message(seq).to_line());
+                log!("anomaly {} {:?}: {}", ev.id, ev.edge, ev.message);
+            }
             sample_at = Instant::now();
         }
 
@@ -79,6 +91,13 @@ fn run() -> Result<(), String> {
             seq += 1;
             broadcaster
                 .send(Message::heartbeat(seq, started.elapsed().as_millis() as u64).to_line());
+            // Silence watchdog: catches a wedged source, not just stale flags.
+            let ts_ms = chrono::Utc::now().timestamp_millis();
+            for ev in anomalies.tick(ts_ms) {
+                seq += 1;
+                broadcaster.send(ev.to_message(seq).to_line());
+                log!("anomaly {} {:?}: {}", ev.id, ev.edge, ev.message);
+            }
             heartbeat_at = Instant::now();
         }
 
