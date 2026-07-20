@@ -13,3 +13,9 @@ sigma-racer-telemetry = { path = "../sigma-racer-telemetry" }
 
 [patch."https://github.com/sigmatactical-org/sigma-racer-telemetry.git"]
 sigma-racer-telemetry = { path = "../sigma-racer-telemetry" }
+
+[patch."ssh://git@github.com/sigmatactical-org/vss-map.git"]
+vss-map = { path = "../vss-map" }
+
+[patch."https://github.com/sigmatactical-org/vss-map.git"]
+vss-map = { path = "../vss-map" }
