@@ -21,6 +21,6 @@ rpmsg = ["dep:sigma-racer-sidearm"]
 [dependencies]
 sigma-racer-sidearm = { git = "ssh://git@github.com/sigmatactical-org/sigma-racer-sidearm.git", rev = "1ce500c", default-features = true, optional = true }
 sigma-racer-telemetry = { git = "ssh://git@github.com/sigmatactical-org/sigma-racer-telemetry.git", rev = "8c686be" }
-mdf4-rs = { version = "0.5.1", default-features = false, features = ["std", "dbc", "can"] }
+mdf4-rs = { version = "0.6.0", default-features = false, features = ["std", "dbc", "can"] }
 chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
 socketcan = { version = "3.6.2", optional = true }

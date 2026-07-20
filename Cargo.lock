@@ -110,9 +110,9 @@ dependencies = [
 
 [[package]]
 name = "dbc-rs"
-version = "0.9.1"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b3d0c4dfd96f9613f8f0faba5c93f56e376e8b64e56d8a4d40cf19f696500a72"
+checksum = "377234afc4098d58394a3c05d0b60530e42ffea04374961998ec33ea882b1aeb"
 dependencies = [
  "sigma-bounded",
 ]
@@ -285,9 +285,9 @@ checksum = "0ceec5bc11778974d1bcb055b18002eba7f4b3518b6a0081b3af5f21666da9ad"
 
 [[package]]
 name = "mdf4-rs"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ebd21f72ae5d531f44ec7a050e5c5e4aff7a2b29670a275532a0cb0e5f0553ff"
+checksum = "f141578fe50897df03d4bdf5ee3a874b288cebfd84ec61351e340a2214c804d1"
 dependencies = [
  "dbc-rs",
  "embedded-can",
