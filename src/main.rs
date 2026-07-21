@@ -17,6 +17,7 @@ use broadcast::Broadcaster;
 use env::{flag, var_or};
 use log::log;
 use sigma_racer_telemetry::anomaly::AnomalyEngine;
+use sigma_racer_telemetry::availability::AvailabilityTracker;
 use sigma_racer_telemetry::protocol::{Message, SNAPSHOT_INTERVAL_MS, SOCKET_PATH, diff_vss};
 use sigma_racer_telemetry::socket::bind_listener;
 use sigma_racer_telemetry::state::VehicleState;
@@ -40,7 +41,13 @@ fn run() -> Result<(), String> {
     let demo = flag("VEHICLE_DEMO");
     let (mut source, mut can_logger) = SignalSource::open(demo)?;
     let mut state = VehicleState::idle();
-    source.apply_to(&mut state, &mut can_logger);
+    let mut tracker = AvailabilityTracker::sigma_default();
+    source.apply_to(
+        &mut state,
+        &mut can_logger,
+        &mut tracker,
+        chrono::Utc::now().timestamp_millis(),
+    );
 
     let listener = bind_listener(Path::new(&socket_path))
         .map_err(|err| format!("bind {socket_path}: {err}"))?;
@@ -49,6 +56,7 @@ fn run() -> Result<(), String> {
     let started = Instant::now();
     let mut seq: u64 = 0;
     let mut prev = state.clone();
+    let mut prev_avail = tracker.stale_paths(chrono::Utc::now().timestamp_millis());
     let mut sample_at = Instant::now();
     let mut snapshot_at = Instant::now();
     let mut heartbeat_at = Instant::now();
@@ -63,22 +71,33 @@ fn run() -> Result<(), String> {
 
         if sample_at.elapsed() >= Duration::from_millis(50) {
             source.step(Duration::from_millis(50));
-            source.apply_to(&mut state, &mut can_logger);
+            // Clock captured once at the loop boundary; detectors are pure.
+            let ts_ms = chrono::Utc::now().timestamp_millis();
+            source.apply_to(&mut state, &mut can_logger, &mut tracker, ts_ms);
 
             let patch = diff_vss(&prev, &state);
-            if !patch.is_empty() {
+            let avail = tracker.stale_paths(ts_ms);
+            // A signal can go stale without its value changing (so the diff is
+            // empty), so emit on an availability change too — otherwise the
+            // cluster only learns the bus died at the next periodic snapshot.
+            let avail_changed = avail != prev_avail;
+            if !patch.is_empty() || avail_changed {
                 seq += 1;
-                broadcaster.send(Message::signal_update(seq, patch).to_line());
+                broadcaster.send(
+                    Message::signal_update(seq, patch)
+                        .with_avail(avail.clone())
+                        .to_line(),
+                );
                 prev = state.clone();
+                prev_avail = avail;
                 snapshot_at = Instant::now();
             } else if snapshot_at.elapsed() >= Duration::from_millis(SNAPSHOT_INTERVAL_MS) {
                 seq += 1;
-                broadcaster.send(Message::snapshot(seq, &state).to_line());
+                broadcaster.send(Message::snapshot(seq, &state).with_avail(avail.clone()).to_line());
+                prev_avail = avail;
                 snapshot_at = Instant::now();
             }
 
-            // Clock captured once at the loop boundary; detectors are pure.
-            let ts_ms = chrono::Utc::now().timestamp_millis();
             for ev in anomalies.observe(ts_ms, &state) {
                 seq += 1;
                 broadcaster.send(ev.to_message(seq).to_line());

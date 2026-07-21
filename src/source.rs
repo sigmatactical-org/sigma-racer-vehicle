@@ -3,6 +3,7 @@
 use crate::can_log::CanLogger;
 use crate::env;
 use crate::sim::Simulator;
+use sigma_racer_telemetry::availability::AvailabilityTracker;
 use sigma_racer_telemetry::can::encode_sim_frames;
 use sigma_racer_telemetry::state::VehicleState;
 use std::time::Duration;
@@ -82,25 +83,39 @@ impl SignalSource {
         }
     }
 
-    /// Pull the newest signals into `state` and refresh derived values.
-    pub fn apply_to(&mut self, state: &mut VehicleState, logger: &mut Option<CanLogger>) {
+    /// Pull the newest signals into `state`, mark arrived frames on `tracker`
+    /// (for per-signal availability), and refresh derived values. `now_ms` is
+    /// the epoch-millisecond sample time.
+    pub fn apply_to(
+        &mut self,
+        state: &mut VehicleState,
+        logger: &mut Option<CanLogger>,
+        tracker: &mut AvailabilityTracker,
+        now_ms: i64,
+    ) {
         match self {
             Self::Sim(sim) => {
                 sim.apply_to(state);
                 state.signals_live = true;
+                // The simulator produces the whole signal set every step.
+                tracker.mark_all(now_ms);
                 if let Some(log) = logger {
                     log.log_frames(&encode_sim_frames(state));
                 }
             }
             #[cfg(feature = "can-socket")]
             Self::Can(bus) => {
-                bus.poll(state, logger);
+                bus.poll(state, logger, tracker, now_ms);
                 state.signals_live = bus.signals_live();
             }
             #[cfg(feature = "rpmsg")]
             Self::Rpmsg(bus) => {
                 bus.poll(state);
                 state.signals_live = bus.signals_live();
+                // The rpmsg bridge delivers the full signal set in one packet.
+                if bus.signals_live() {
+                    tracker.mark_all(now_ms);
+                }
             }
         }
         state.refresh_derived();
