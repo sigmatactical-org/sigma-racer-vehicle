@@ -14,21 +14,21 @@ jobs:
       run:
         working-directory: embedded/sigma-racer-vehicle
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           path: embedded/sigma-racer-vehicle
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           repository: sigmatactical-org/sigma-racer-telemetry
           path: embedded/sigma-racer-telemetry
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           repository: sigmatactical-org/sigma-racer-sidearm
           path: embedded/sigma-racer-sidearm
 
-      - uses: dtolnay/rust-toolchain@1.97.0
+      - uses: dtolnay/rust-toolchain@1.97.1
         with:
           components: clippy
 
@@ -47,8 +47,8 @@ jobs:
   fmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@1.97.0
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@1.97.1
         with:
           components: rustfmt
       - run: cargo fmt --all -- --check
